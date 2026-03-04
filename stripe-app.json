@@ -1,0 +1,33 @@
+{
+  "id": "com.drip.donations",
+  "version": "1.0.0",
+  "name": "Drip Donations",
+  "icon": "./drip_icon_32.png",
+  "distribution_type": "public",
+  "stripe_api_access_type": "oauth",
+  "allowed_redirect_uris": [
+    "https://YOUR_DOMAIN/oauth/callback"
+  ],
+  "permissions": [
+    {
+      "permission": "payment_intent_read",
+      "purpose": "Read payment data to calculate donation amounts"
+    },
+    {
+      "permission": "event_read",
+      "purpose": "Receive webhook events for payment processing"
+    },
+    {
+      "permission": "webhook_endpoint_write",
+      "purpose": "Create webhook endpoints for payment notifications"
+    },
+    {
+      "permission": "transfer_write",
+      "purpose": "Process charitable donation transfers"
+    }
+  ],
+  "post_install_action": {
+    "type": "external",
+    "url": "https://YOUR_DOMAIN/onboarding"
+  }
+}
