@@ -6,7 +6,7 @@
   "distribution_type": "public",
   "stripe_api_access_type": "oauth",
   "allowed_redirect_uris": [
-    "https://YOUR_DOMAIN/oauth/callback"
+    "https://dripfinancial.org/oauth/callback"
   ],
   "permissions": [
     {
@@ -28,6 +28,6 @@
   ],
   "post_install_action": {
     "type": "external",
-    "url": "https://YOUR_DOMAIN/onboarding"
+    "url": "https://dripfinancial.org/onboarding"
   }
 }

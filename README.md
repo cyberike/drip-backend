@@ -68,7 +68,7 @@ cp .env.example .env
 | `STRIPE_SECRET_KEY`    | Your Stripe secret key (`sk_test_...` or `sk_live_...`) |
 | `STRIPE_CLIENT_ID`     | Your Stripe Connect app's client ID (`ca_...`)          |
 | `STRIPE_WEBHOOK_SECRET`| Signing secret from your webhook endpoint (`whsec_...`) |
-| `DRIP_BASE_URL`        | The public URL of this server (e.g. `https://drip.co`)  |
+| `DRIP_BASE_URL`        | The public URL of this server (`https://dripfinancial.org`)  |
 
 ### 4. Run the Server
 
@@ -176,7 +176,7 @@ SQLite is used for development and single-server deployments. The DB file is `dr
 
 ### Environment
 
-- Set `DRIP_BASE_URL` to your real public domain (used in OAuth redirect URIs and webhook URLs)
+- Set `DRIP_BASE_URL` to `https://dripfinancial.org`
 - Use `sk_live_...` keys in production
 - Never commit `.env` to version control
 
@@ -231,13 +231,13 @@ The server is stateless (except for the SQLite file). For PaaS deployments:
 | Fly.io      | Mount a volume for `drip.db`                     |
 | AWS ECS     | Use RDS Postgres; deploy as a Fargate service    |
 
-### Update `stripe-app.json`
+### Domain Configuration
 
-Replace `YOUR_DOMAIN` in `stripe-app.json` with your actual domain before publishing the app:
+`stripe-app.json` is pre-configured for `dripfinancial.org`:
 
 ```json
-"allowed_redirect_uris": ["https://drip.co/oauth/callback"],
-"post_install_action": { "url": "https://drip.co/onboarding" }
+"allowed_redirect_uris": ["https://dripfinancial.org/oauth/callback"],
+"post_install_action": { "url": "https://dripfinancial.org/onboarding" }
 ```
 
 ---
