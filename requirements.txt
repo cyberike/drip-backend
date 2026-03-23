@@ -2,3 +2,4 @@ fastapi
 uvicorn
 stripe
 python-dotenv
+psycopg2-binary

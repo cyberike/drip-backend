@@ -1,13 +1,11 @@
 import React from 'react';
 import { ExtensionContextValue } from '@stripe/ui-extension-sdk/context';
+import { fetchStripeSignature } from '@stripe/ui-extension-sdk/utils';
 import {
   Badge,
   Box,
-  Button,
   ContextView,
   Divider,
-  Icon,
-  Link,
   List,
   ListItem,
   Spinner,
@@ -37,12 +35,22 @@ const DashboardView = ({
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const acct = environment?.objectContext?.id;
-    const headers: Record<string, string> = {};
-    if (acct) headers['Stripe-Account'] = acct;
+    const acct = userContext?.account?.id;
+    const userId = userContext?.id;
 
     const fetchData = async () => {
       try {
+        const headers: Record<string, string> = {};
+        if (acct) headers['Stripe-Account'] = acct;
+        if (userId) headers['Stripe-User-Id'] = userId;
+
+        // Add signature for authenticated requests
+        try {
+          headers['Stripe-Signature'] = await fetchStripeSignature();
+        } catch (sigErr) {
+          console.warn('Could not fetch signature:', sigErr);
+        }
+
         const [statsRes, settingsRes] = await Promise.all([
           fetch(`${DRIP_API}/api/stats`, { headers }),
           fetch(`${DRIP_API}/api/settings`, { headers }),
@@ -57,7 +65,7 @@ const DashboardView = ({
       }
     };
     fetchData();
-  }, [environment]);
+  }, [userContext, environment]);
 
   if (loading) {
     return (

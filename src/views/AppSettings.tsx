@@ -1,5 +1,6 @@
 import React from 'react';
 import { ExtensionContextValue } from '@stripe/ui-extension-sdk/context';
+import { fetchStripeSignature } from '@stripe/ui-extension-sdk/utils';
 import {
   Box,
   Select,
@@ -49,20 +50,28 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
     fetchCharities();
   }, []);
 
-  // Fetch current settings on mount
+  // Fetch current settings on mount (authenticated)
   React.useEffect(() => {
-    const acct = environment?.objectContext?.id;
+    const acct = userContext?.account?.id;
     if (!acct) return;
 
     const fetchSettings = async () => {
       try {
+        const headers: Record<string, string> = {
+          'Stripe-Account': acct,
+          'Stripe-User-Id': userContext?.id || '',
+        };
+
+        // Add signature for GET requests
+        try {
+          headers['Stripe-Signature'] = await fetchStripeSignature();
+        } catch (sigErr) {
+          console.warn('Could not fetch signature for GET:', sigErr);
+        }
+
         const [settingsRes, allocRes] = await Promise.all([
-          fetch(`${DRIP_API}/api/settings`, {
-            headers: { 'Stripe-Account': acct },
-          }),
-          fetch(`${DRIP_API}/api/allocations`, {
-            headers: { 'Stripe-Account': acct },
-          }),
+          fetch(`${DRIP_API}/api/settings`, { headers }),
+          fetch(`${DRIP_API}/api/allocations`, { headers }),
         ]);
 
         if (settingsRes.ok) {
@@ -90,12 +99,13 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
       }
     };
     fetchSettings();
-  }, [environment]);
+  }, [userContext, environment]);
 
   const saveSettings = React.useCallback(
     async (values: { [x: string]: string }) => {
       setStatus('saving');
-      const acct = environment?.objectContext?.id;
+      const acct = userContext?.account?.id;
+      const userId = userContext?.id;
 
       try {
         // 1. Save donation percentage
@@ -105,15 +115,27 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
           return;
         }
 
+        // Build the settings payload with auth fields
+        const settingsPayload = {
+          donation_pct: pct,
+          auto_donate: true,
+          user_id: userId,
+          account_id: acct,
+        };
+
+        // Get Stripe signature for the request
+        const signature = await fetchStripeSignature();
+
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
+          'Stripe-Signature': signature,
         };
         if (acct) headers['Stripe-Account'] = acct;
 
         await fetch(`${DRIP_API}/api/settings`, {
           method: 'PUT',
           headers,
-          body: JSON.stringify({ donation_pct: pct, auto_donate: true }),
+          body: JSON.stringify(settingsPayload),
         });
 
         // 2. Build charity allocations from selected charities
@@ -138,10 +160,23 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
                 : sharePerCharity,
           }));
 
+          const allocPayload = {
+            allocations,
+            user_id: userId,
+            account_id: acct,
+          };
+
+          // Get a fresh signature for this request
+          const allocSignature = await fetchStripeSignature();
+
           await fetch(`${DRIP_API}/api/allocations`, {
             method: 'POST',
-            headers,
-            body: JSON.stringify({ allocations }),
+            headers: {
+              'Content-Type': 'application/json',
+              'Stripe-Signature': allocSignature,
+              ...(acct ? { 'Stripe-Account': acct } : {}),
+            },
+            body: JSON.stringify(allocPayload),
           });
         }
 
@@ -151,7 +186,7 @@ const AppSettings = ({ userContext, environment }: ExtensionContextValue) => {
         setStatus('error');
       }
     },
-    [environment]
+    [userContext, environment]
   );
 
   const statusLabel = React.useMemo(() => {
