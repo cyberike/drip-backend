@@ -1,0 +1,57 @@
+{
+  "id": "com.drip.donations",
+  "version": "1.0.0",
+  "name": "Drip Donations",
+  "icon": "./drip_icon_32.png",
+  "distribution_type": "public",
+  "stripe_api_access_type": "oauth",
+  "allowed_redirect_uris": [
+    "https://dripfinancial.org/oauth/callback"
+  ],
+  "permissions": [
+    {
+      "permission": "payment_intent_read",
+      "purpose": "Read payment data to calculate donation amounts"
+    },
+    {
+      "permission": "event_read",
+      "purpose": "Receive webhook events for payment processing"
+    },
+    {
+      "permission": "webhook_endpoint_write",
+      "purpose": "Create webhook endpoints for payment notifications"
+    },
+    {
+      "permission": "transfer_write",
+      "purpose": "Process charitable donation transfers"
+    },
+    {
+      "permission": "secret_write",
+      "purpose": "Store donation settings securely between sessions"
+    }
+  ],
+  "ui_extension": {
+    "views": [
+      {
+        "viewport": "stripe.dashboard.drawer.default",
+        "component": "DashboardView"
+      },
+      {
+        "viewport": "stripe.dashboard.payment.detail",
+        "component": "DashboardView"
+      },
+      {
+        "viewport": "settings",
+        "component": "AppSettings"
+      }
+    ],
+    "actions": [],
+    "content_security_policy": {
+      "connect-src": "https://dripfinancial.org",
+      "purpose": "Connect to Drip backend to load and save donation settings"
+    }
+  },
+  "post_install_action": {
+    "type": "settings"
+  }
+}
